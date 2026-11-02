@@ -1,3 +1,12 @@
+Here is the complete, production-ready source code for an interactive Spiral Math Game designed specifically for a combined Grade 7/8 curriculum. It features multiple player tokens, a beautiful spiral board layout, sound-effect visual indicators, and a dynamic middle-school math question generator.
+Because it is bundled entirely inside a single standalone file, you can upload it instantly to Netlify to share with your students.
+
+📄 Create Your File
+
+1. Create a folder on your computer named spiral-math-game.
+2. Inside that folder, create a blank text file named index.html.
+3. Copy the entire block of code below and paste it into that file, then save it.
+html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -304,3 +313,182 @@
             { topic: "Exponents & Power Rules", text: "Simplify the root notation equivalent: What value equals √64?", options: ["6", "7", "8", "16"], correct: 2 },
             { topic: "Fractions & Decimals", text: "Compute the sum: 2/3 + 1/6", options: ["3/9", "5/6", "4/6", "1/2"], correct: 1 },
             { topic: "Scientific Notation", text: "Convert to standard form: 3.5 × 10⁻³", options: ["0.0035", "0.035", "3500", "0.00035"], correct: 0 }
+Use code with caution.
+];
+class SpiralGame {
+constructor() {
+this.totalSpaces = 30; // Length of track
+this.players = [
+{ id: 1, name: "Team Fraction", position: 0, color: "#ef4444" },
+{ id: 2, name: "Team Decimal", position: 0, color: "#3b82f6" },
+{ id: 3, name: "Team Integer", position: 0, color: "#10b981" }
+];
+this.activePlayerIdx = 0;
+this.trackCoordinates = [];
+this.currentPendingMove = 0;
+this.currentQuestion = null;
+this.generateSpiralCoordinates();
+this.renderBoard();
+this.updateUI();
+}
+// Generate an Archimedean spiral mapping coordinate algorithm
+generateSpiralCoordinates() {
+const centerX = 250;
+const centerY = 250;
+let rMax = 210;
+// Track nodes plotted outside-in towards target finish center
+for (let i = 0; i <= this.totalSpaces; i++) {
+let fraction = i / this.totalSpaces;
+let angle = fraction * 3.5 * Math.PI * 2; // Spiral revolutions
+let radius = rMax * (1 - fraction * 0.85); // Shrink inward
+let x = centerX + radius * Math.cos(angle);
+let y = centerY + radius * Math.sin(angle);
+this.trackCoordinates.push({ x, y });
+}
+}
+renderBoard() {
+const svg = document.getElementById("board-svg");
+svg.innerHTML = ""; // Clear template
+// Render continuous connecting line pathway
+let pathD = M ${this.trackCoordinates[0].x} ${this.trackCoordinates[0].y} ;
+for (let i = 1; i <= this.totalSpaces; i++) {
+pathD += L ${this.trackCoordinates[i].x} ${this.trackCoordinates[i].y} ;
+}
+let pathEl = document.createElementNS("w3.org", "path");
+pathEl.setAttribute("d", pathD);
+pathEl.setAttribute("class", "spiral-track");
+svg.appendChild(pathEl);
+// Render Space Node Dots
+this.trackCoordinates.forEach((pt, index) => {
+let circle = document.createElementNS("w3.org", "circle");
+circle.setAttribute("cx", pt.x);
+circle.setAttribute("cy", pt.y);
+circle.setAttribute("r", index === 0 || index === this.totalSpaces ? "12" : "6");
+circle.setAttribute("fill", index === 0 ? "#64748b" : index === this.totalSpaces ? "#f59e0b" : "#ffffff");
+circle.setAttribute("stroke", "#475569");
+circle.setAttribute("stroke-width", "2");
+circle.setAttribute("class", "space-node");
+svg.appendChild(circle);
+// Add label flag text marks for home or win markers
+if (index === 0 || index === this.totalSpaces) {
+let text = document.createElementNS("w3.org", "text");
+text.setAttribute("x", pt.x);
+text.setAttribute("y", pt.y + 4);
+text.setAttribute("font-size", "9px");
+text.setAttribute("font-weight", "bold");
+text.setAttribute("text-anchor", "middle");
+text.setAttribute("fill", index === 0 ? "#fff" : "#fff");
+text.textContent = index === 0 ? "START" : "WIN";
+svg.appendChild(text);
+}
+});
+// Append Token elements to canvas hierarchy
+this.players.forEach(p => {
+let token = document.createElementNS("w3.org", "circle");
+token.setAttribute("id", token-player-${p.id});
+token.setAttribute("r", "10");
+token.setAttribute("fill", p.color);
+token.setAttribute("stroke", "#ffffff");
+token.setAttribute("stroke-width", "2");
+token.setAttribute("style", "transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);");
+svg.appendChild(token);
+});
+this.updateTokenPositions();
+}
+updateTokenPositions() {
+this.players.forEach(p => {
+const token = document.getElementById(token-player-${p.id});
+const coord = this.trackCoordinates[p.position];
+// Stagger tokens cleanly around space cell overlap offsets
+let offsetX = (p.id - 2) * 5;
+let offsetY = p.id === 3 ? 5 : -2;
+token.setAttribute("cx", coord.x + offsetX);
+token.setAttribute("cy", coord.y + offsetY);
+});
+}
+updateUI() {
+const activePlayer = this.players[this.activePlayerIdx];
+document.getElementById("current-player-prompt").textContent = ${activePlayer.name}'s Turn;
+const listUi = document.getElementById("player-list-ui");
+listUi.innerHTML = "";
+this.players.forEach((p, idx) => {
+const activeClass = idx === this.activePlayerIdx ? "active" : "";
+listUi.innerHTML += <div class="player-badge ${activeClass}"> <div class="player-info"> <span class="token-indicator" style="background-color: ${p.color}"></span> <span style="font-weight: 600;">${p.name}</span> </div> <span style="font-size: 0.95rem; font-weight: bold; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">Space ${p.position}/${this.totalSpaces}</span> </div>;
+});
+}
+rollDice() {
+document.getElementById("roll-btn").disabled = true;
+const diceValEl = document.getElementById("dice-value");
+let counter = 0;
+let interval = setInterval(() => {
+diceValEl.textContent = Math.floor(Math.random() * 4) + 1; // 1-4 step scaling configuration
+counter++;
+if (counter > 8) {
+clearInterval(interval);
+this.currentPendingMove = Math.floor(Math.random() * 4) + 1;
+diceValEl.textContent = this.currentPendingMove;
+this.serveQuestion();
+}
+}, 60);
+}
+serveQuestion() {
+// Select dynamic random math target prompt
+const randomIdx = Math.floor(Math.random() * mathProblemPool.length);
+this.currentQuestion = mathProblemPool[randomIdx];
+document.getElementById("question-topic").textContent = this.currentQuestion.topic.toUpperCase();
+document.getElementById("question-text-content").textContent = this.currentQuestion.text;
+const optionsContainer = document.getElementById("options-container");
+optionsContainer.innerHTML = "";
+this.currentQuestion.options.forEach((opt, idx) => {
+optionsContainer.innerHTML += <button class="option-btn" onclick="gameEngine.submitAnswer(${idx})">${opt}</button>;
+});
+document.getElementById("feedback-box").style.display = "none";
+document.getElementById("quiz-card").classList.add("active");
+}
+submitAnswer(selectedIndex) {
+const feedback = document.getElementById("feedback-box");
+feedback.style.display = "block";
+// Block matching option interaction strings
+const optionBtns = document.querySelectorAll(".option-btn");
+optionBtns.forEach(btn => btn.disabled = true);
+const activePlayer = this.players[this.activePlayerIdx];
+if (selectedIndex === this.currentQuestion.correct) {
+feedback.style.backgroundColor = "#d1fae5";
+feedback.style.color = "#065f46";
+feedback.textContent = Correct! Advance ${this.currentPendingMove} spaces.;
+// Increment and check ceiling limits
+activePlayer.position = Math.min(activePlayer.position + this.currentPendingMove, this.totalSpaces);
+this.updateTokenPositions();
+} else {
+feedback.style.backgroundColor = "#fee2e2";
+feedback.style.color = "#991b1b";
+feedback.textContent = Incorrect. The correct answer was "${this.currentQuestion.options[this.currentQuestion.correct]}". Token stays in place.;
+}
+setTimeout(() => {
+document.getElementById("quiz-card").classList.remove("active");
+if (activePlayer.position >= this.totalSpaces) {
+alert(🎉 Congratulations! ${activePlayer.name} has unlocked the center core and won the game!);
+this.resetGame();
+return;
+}
+// Cycle to next loop turn rotation index
+this.activePlayerIdx = (this.activePlayerIdx + 1) % this.players.length;
+this.updateUI();
+document.getElementById("roll-btn").disabled = false;
+document.getElementById("dice-value").textContent = "-";
+}, 3500);
+}
+resetGame() {
+this.players.forEach(p => p.position = 0);
+this.activePlayerIdx = 0;
+this.updateTokenPositions();
+this.updateUI();
+document.getElementById("roll-btn").disabled = false;
+document.getElementById("dice-value").textContent = "-";
+}
+}
+// Initialize object on document parse structure loop
+let gameEngine;
+window.onload = () => {
+gameEngine = new SpiralGame();
+};
