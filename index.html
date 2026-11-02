@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Math Challenge - Grade 7/8 Number Sense</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 950px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .board-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px;
+            position: relative;
+        }
+
+        #board-svg {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .player-status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .player-badge {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: #fff;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .player-badge.active {
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1);
+            background: #f0fdf4;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .token-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dice-section {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .dice-display {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--text-main);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .question-box {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .question-box.active {
+            display: block;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .feedback-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .spiral-track {
+            fill: none;
+            stroke: #cbd5e1;
+            stroke-width: 32;
+            stroke-linecap: round;
+        }
+
+        .space-node {
+            cursor: pointer;
+            transition: r 0.2s;
+        }
+        
+        .space-node:hover {
+            r: 8;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌀 Spiral Math Challenge</h1>
+        <p>Master Fractions, Decimals, Integers, Exponents & Real Numbers</p>
+    </header>
+
+    <div class="game-container">
+        <!-- Visual Board Area -->
+        <div class="board-wrapper">
+            <svg id="board-svg" viewBox="0 0 500 500">
+                <!-- Board elements generated by JavaScript -->
+            </svg>
+        </div>
+
+        <!-- Controls Side Bar -->
+        <div class="control-panel">
+            <!-- Player Standings -->
+            <div class="panel-card">
+                <h3 style="margin-bottom:12px;">Players</h3>
+                <div class="player-status-list" id="player-list-ui">
+                    <!-- Dynamic Badges -->
+                </div>
+            </div>
+
+            <!-- Dice Roller Actions -->
+            <div class="panel-card dice-section" id="turn-controls">
+                <h3 id="current-player-prompt">Player 1's Turn</h3>
+                <div class="dice-display" id="dice-value">-</div>
+                <button class="btn" id="roll-btn" onclick="gameEngine.rollDice()">Roll Die</button>
+            </div>
+
+            <!-- Quiz Overlay Interface -->
+            <div class="panel-card question-box" id="quiz-card">
+                <div style="font-size: 0.85rem; color: var(--primary); font-weight: bold; margin-bottom: 5px;" id="question-topic">TOPIC</div>
+                <div class="question-text" id="question-text-content">What is the math question text?</div>
+                <div class="options-list" id="options-container">
+                    <!-- Buttons generated dynamically -->
+                </div>
+                <div class="feedback-message" id="feedback-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive Question Bank supporting Spiral Review Objectives
+        const mathProblemPool = [
+            { topic: "Integers & Rational Ops", text: "Evaluate: (-12) + (-5) × 3", options: ["-27", "-51", "-17", "27"], correct: 0 },
+            { topic: "Integers & Rational Ops", text: "What is the absolute distance between -4.5 and 2.25 on a standard number line?", options: ["2.25", "6.75", "-2.25", "6.5"], correct: 1 },
+            { topic: "Fractions & Decimals", text: "Convert 7/8 into its exact decimal representation.", options: ["0.78", "0.85", "0.875", "0.75"], correct: 2 },
+            { topic: "Fractions & Decimals", text: "Solve: 3.5 ÷ (-0.5)", options: ["-7", "7", "-1.75", "-0.7"], correct: 0 },
+            { topic: "Percents & Rates", text: "A jacket costs $60. It is on sale for 20% off. What is the final sale price?", options: ["$40", "$50", "$48", "$12"], correct: 2 },
+            { topic: "Ordering & Comparing", text: "Which set of values is ordered correctly from least to greatest?", options: ["-3, -7/2, 2.1, √5", "-7/2, -3, 2.1, √5", "√5, 2.1, -3, -7/2", "-3, 2.1, √5, -7/2"], correct: 1 },
+            { topic: "Exponents & Power Rules", text: "Evaluate the expression: 2⁴ × 5⁻¹", options: ["16/5", "8/5", "32", "-16"], correct: 0 },
+            { topic: "Scientific Notation", text: "Express the standard index scalar number 4,120,000 in correct scientific notation notation format.", options: ["41.2 × 10⁵", "4.12 × 10⁶", "4.12 × 10⁻⁶", "4.12 × 10⁷"], correct: 1 },
+            { topic: "Real Number System", text: "Identify the classification of the mathematical constant Pi (π).", options: ["Rational Real Number", "Integer Value", "Irrational Real Number", "Terminating Decimal"], correct: 2 },
+            { topic: "Exponents & Power Rules", text: "Simplify the root notation equivalent: What value equals √64?", options: ["6", "7", "8", "16"], correct: 2 },
+            { topic: "Fractions & Decimals", text: "Compute the sum: 2/3 + 1/6", options: ["3/9", "5/6", "4/6", "1/2"], correct: 1 },
+            { topic: "Scientific Notation", text: "Convert to standard form: 3.5 × 10⁻³", options: ["0.0035", "0.035", "3500", "0.00035"], correct: 0 }
